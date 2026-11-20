@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wassalna</title>
+    <title>My App</title>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
         body {
@@ -13,41 +13,41 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 16px;
         }
         .card {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
-            padding: 32px 24px;
+            padding: 28px 20px;
             border-radius: 20px;
             width: 100%;
-            max-width: 380px;
+            max-width: 420px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.1);
         }
-        h1 { font-size: 23px; margin-bottom: 14px; line-height: 1.4; }
-        p { font-size: 14px; color: #ccc; margin-bottom: 20px; line-height: 1.6; }
+        h1 { font-size: 22px; margin-bottom: 14px; line-height: 1.4; }
+        p { font-size: 14px; color: #ccc; margin-bottom: 18px; line-height: 1.6; }
         input {
             width: 100%;
-            padding: 13px;
-            margin-bottom: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
             border-radius: 12px;
             border: none;
             background: rgba(255,255,255,0.15);
             color: #fff;
-            font-size: 15px;
+            font-size: 14px;
             outline: none;
         }
         input::placeholder { color: #bbb; }
         button {
             width: 100%;
-            padding: 13px;
+            padding: 12px;
             border: none;
             border-radius: 12px;
             background: #4e54c8;
             color: white;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.2s;
@@ -55,24 +55,57 @@
         }
         button:active { transform: scale(0.97); }
         .secondary-btn { background: transparent; border: 1px solid #4e54c8; margin-top: 10px; }
+        .admin-btn { background: linear-gradient(135deg, #f59e0b, #d97706); margin-top: 10px; }
+        .danger-btn { background: #ef4444; padding: 6px 12px; font-size: 12px; width: auto; margin-top: 8px; border-radius: 8px; }
         .hidden { display: none; }
         .error { color: #ff6b6b; font-size: 13px; margin-bottom: 10px; min-height: 18px; }
         .info-box {
             background: rgba(255,255,255,0.07);
             padding: 14px;
             border-radius: 12px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             text-align: start;
             font-size: 14px;
             line-height: 1.8;
         }
+        /* Admin Panel Styles */
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(78, 84, 200, 0.25);
+            border: 1px solid rgba(78, 84, 200, 0.5);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+            font-size: 15px;
+        }
+        .stats-count { font-size: 22px; font-weight: bold; color: #f59e0b; }
+        .users-list {
+            max-height: 320px;
+            overflow-y: auto;
+            text-align: start;
+            margin-bottom: 14px;
+        }
+        .user-item {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .user-item strong { color: #a5b4fc; }
+        .admin-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+        .admin-actions button { margin-top: 0; font-size: 14px; padding: 10px; }
     </style>
 </head>
 <body>
 
     <!-- 0. شاشة التحميل -->
     <div id="loading-screen" class="card">
-        <p style="margin:0;">...</p>
+        <p style="margin:0;">جاري التحميل...</p>
     </div>
 
     <!-- 1. شاشة الترحيب -->
@@ -113,26 +146,48 @@
         <button class="secondary-btn" id="btn-verify-logout" onclick="logoutUser()">تسجيل الخروج</button>
     </div>
 
-    <!-- 5. الشاشة الداخلية بعد النجاح -->
+    <!-- 5. الشاشة الرئيسية للمستخدم -->
     <div id="home-screen" class="card hidden">
-        <h1 id="txt-member">مرحباً بك!</h1>
+        <h1 id="txt-member">أهلاً بك في حسابك!</h1>
         <div class="info-box">
             <div><strong id="lbl-name">الاسم:</strong> <span id="user-name">-</span></div>
             <div><strong id="lbl-phone">الهاتف:</strong> <span id="user-phone">-</span></div>
             <div><strong id="lbl-email">الإيميل:</strong> <span id="user-email">-</span></div>
         </div>
+        <!-- زر يظهر للمدير فقط -->
+        <button id="btn-open-admin" class="admin-btn hidden" onclick="openAdminPanel()">⚙️ لوحة التحكم (Admin)</button>
         <button class="secondary-btn" id="btn-logout" onclick="logoutUser()">تسجيل الخروج</button>
+    </div>
+
+    <!-- 6. لوحة التحكم (Admin Panel) -->
+    <div id="admin-screen" class="card hidden">
+        <h1>⚙️ لوحة التحكم</h1>
+        <div class="stats-bar">
+            <span>إجمالي المستخدمين:</span>
+            <span id="admin-total-users" class="stats-count">0</span>
+        </div>
+        <input type="text" id="admin-search" placeholder="🔍 ابحث بالاسم أو الإيميل..." oninput="filterUsers()">
+        <div class="admin-actions">
+            <button onclick="loadAllUsers()">🔄 تحديث</button>
+            <button class="secondary-btn" onclick="showScreen('home-screen')">رجوع</button>
+        </div>
+        <div id="admin-users-list" class="users-list">
+            <p>جاري جلب البيانات...</p>
+        </div>
     </div>
 
     <!-- Firebase Auth + Firestore -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 👑 إيميل المدير (تقدر تبدلو وقت ما تحب)
+        const ADMIN_EMAIL = "abdoukhodja88@gmail.com";
 
         const translations = {
             ar: {
-                dir: "rtl", welcome: "مرحباً بك في Wassalna", loginBtn: "تسجيل الدخول", signupBtn: "إنشاء حساب جديد",
+                dir: "rtl", welcome: "مرحباً بك", loginBtn: "تسجيل الدخول", signupBtn: "إنشاء حساب جديد",
                 namePl: "الاسم الكامل", phonePl: "رقم الهاتف", emailPl: "البريد الإلكتروني (Gmail)", passPl: "كلمة السر (6 أحرف على الأقل)",
                 enter: "دخول", submit: "إنشاء الحساب", back: "رجوع", verifyTitle: "تحقق من بريدك",
                 verifyDesc: "أرسلنا رسالة تأكيد إلى Gmail الخاص بك. افتحها واضغط على الرابط ثم عد هنا.",
@@ -141,7 +196,7 @@
                 lblName: "الاسم:", lblPhone: "الهاتف:", lblEmail: "الإيميل:"
             },
             fr: {
-                dir: "ltr", welcome: "Bienvenue sur Wassalna", loginBtn: "Se connecter", signupBtn: "Créer un compte",
+                dir: "ltr", welcome: "Bienvenue", loginBtn: "Se connecter", signupBtn: "Créer un compte",
                 namePl: "Nom complet", phonePl: "Numéro de téléphone", emailPl: "Adresse Gmail", passPl: "Mot de passe (6 caractères min)",
                 enter: "Entrer", submit: "S'inscrire", back: "Retour", verifyTitle: "Vérifiez votre e-mail",
                 verifyDesc: "Un lien a été envoyé à votre Gmail. Cliquez dessus puis revenez ici.",
@@ -150,7 +205,7 @@
                 lblName: "Nom :", lblPhone: "Téléphone :", lblEmail: "E-mail :"
             },
             en: {
-                dir: "ltr", welcome: "Welcome to Wassalna", loginBtn: "Login", signupBtn: "Create Account",
+                dir: "ltr", welcome: "Welcome", loginBtn: "Login", signupBtn: "Create Account",
                 namePl: "Full Name", phonePl: "Phone Number", emailPl: "Gmail Address", passPl: "Password (min 6 chars)",
                 enter: "Login", submit: "Sign Up", back: "Back", verifyTitle: "Verify your email",
                 verifyDesc: "We sent a verification link to your Gmail. Click it, then come back here.",
@@ -202,17 +257,25 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        let allUsersCache = [];
 
         window.showScreen = function(screenId) {
-            ['loading-screen', 'welcome-screen', 'login-screen', 'signup-screen', 'verify-screen', 'home-screen'].forEach(id => {
+            ['loading-screen', 'welcome-screen', 'login-screen', 'signup-screen', 'verify-screen', 'home-screen', 'admin-screen'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(screenId).classList.remove('hidden');
         }
 
-        // جلب بيانات المستخدم من Firestore وعرضها
         async function loadUserProfile(user) {
             document.getElementById('user-email').innerText = user.email;
+            // إظهار زر لوحة التحكم للمدير فقط
+            const adminBtn = document.getElementById('btn-open-admin');
+            if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                adminBtn.classList.remove('hidden');
+            } else {
+                adminBtn.classList.add('hidden');
+            }
+
             try {
                 const snap = await getDoc(doc(db, "users", user.uid));
                 if (snap.exists()) {
@@ -229,7 +292,6 @@
             showScreen('home-screen');
         }
 
-        // التحقق التلقائي عند فتح التطبيق
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 if (user.emailVerified) {
@@ -242,7 +304,6 @@
             }
         });
 
-        // تسجيل الدخول
         window.loginUser = async function() {
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
@@ -262,7 +323,6 @@
             }
         }
 
-        // إنشاء حساب + حفظ في Firestore
         window.registerUser = async function() {
             const fullName = document.getElementById('fullname').value.trim();
             const phone = document.getElementById('phone').value.trim();
@@ -280,7 +340,6 @@
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // حفظ المعلومات في قاعدة البيانات Firestore
                 await setDoc(doc(db, "users", user.uid), {
                     fullName: fullName,
                     phone: phone,
@@ -295,7 +354,6 @@
             }
         }
 
-        // التحقق من تأكيد الإيميل
         window.checkVerification = async function() {
             const user = auth.currentUser;
             await user.reload();
@@ -306,11 +364,69 @@
             }
         }
 
-        // تسجيل الخروج
         window.logoutUser = async function() {
             await signOut(auth);
             showScreen('welcome-screen');
         }
+
+        // --- وظائف لوحة التحكم (Admin Panel) ---
+        window.openAdminPanel = async function() {
+            showScreen('admin-screen');
+            await loadAllUsers();
+        }
+
+        window.loadAllUsers = async function() {
+            const listDiv = document.getElementById('admin-users-list');
+            listDiv.innerHTML = "<p>جاري جلب المستخدمين...</p>";
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                allUsersCache = [];
+                querySnapshot.forEach((docSnap) => {
+                    allUsersCache.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                document.getElementById('admin-total-users').innerText = allUsersCache.length;
+                renderUsers(allUsersCache);
+            } catch (error) {
+                listDiv.innerHTML = `<p class="error">خطأ في جلب البيانات: ${error.message}</p>`;
+            }
+        }
+
+        function renderUsers(users) {
+            const listDiv = document.getElementById('admin-users-list');
+            if (users.length === 0) {
+                listDiv.innerHTML = "<p>لا يوجد مستخدمون مسجلون في Firestore بعد.</p>";
+                return;
+            }
+            listDiv.innerHTML = users.map(u => `
+                <div class="user-item">
+                    <div><strong>الاسم:</strong> ${u.fullName || '-'}</div>
+                    <div><strong>الهاتف:</strong> ${u.phone || '-'}</div>
+                    <div><strong>الإيميل:</strong> ${u.email || '-'}</div>
+                    <button class="danger-btn" onclick="deleteUserDoc('${u.id}')">🗑️ حذف من القاعدة</button>
+                </div>
+            `).join('');
+        }
+
+        window.filterUsers = function() {
+            const q = document.getElementById('admin-search').value.toLowerCase().trim();
+            const filtered = allUsersCache.filter(u =>
+                (u.fullName || '').toLowerCase().includes(q) ||
+                (u.email || '').toLowerCase().includes(q) ||
+                (u.phone || '').includes(q)
+            );
+            renderUsers(filtered);
+        }
+
+        window.deleteUserDoc = async function(uid) {
+            if (!confirm("هل أنت متأكد من حذف بيانات هذا المستخدم من قاعدة البيانات؟")) return;
+            try {
+                await deleteDoc(doc(db, "users", uid));
+                await loadAllUsers();
+            } catch (error) {
+                alert("خطأ أثناء الحذف: " + error.message);
+            }
+        }
     </script>
 </body>
-</html>
+    </html>
+    
