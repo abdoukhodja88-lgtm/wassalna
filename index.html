@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wassalna</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            padding: 32px 24px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        h1 { font-size: 23px; margin-bottom: 14px; line-height: 1.4; }
+        p { font-size: 14px; color: #ccc; margin-bottom: 20px; line-height: 1.6; }
+        input {
+            width: 100%;
+            padding: 13px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+        }
+        input::placeholder { color: #bbb; }
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 12px;
+            background: #4e54c8;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 6px;
+        }
+        button:active { transform: scale(0.97); }
+        .secondary-btn { background: transparent; border: 1px solid #4e54c8; margin-top: 10px; }
+        .hidden { display: none; }
+        .error { color: #ff6b6b; font-size: 13px; margin-bottom: 10px; min-height: 18px; }
+        .info-box {
+            background: rgba(255,255,255,0.07);
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            text-align: start;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 0. شاشة التحميل -->
+    <div id="loading-screen" class="card">
+        <p style="margin:0;">...</p>
+    </div>
+
+    <!-- 1. شاشة الترحيب -->
+    <div id="welcome-screen" class="card hidden">
+        <h1 id="txt-welcome">مرحباً بك</h1>
+        <button id="btn-go-login" onclick="showScreen('login-screen')">تسجيل الدخول</button>
+        <button class="secondary-btn" id="btn-go-signup" onclick="showScreen('signup-screen')">إنشاء حساب جديد</button>
+    </div>
+
+    <!-- 2. شاشة تسجيل الدخول -->
+    <div id="login-screen" class="card hidden">
+        <h1 id="txt-login-title">تسجيل الدخول</h1>
+        <div id="login-error" class="error"></div>
+        <input type="email" id="login-email" placeholder="البريد الإلكتروني">
+        <input type="password" id="login-password" placeholder="كلمة السر">
+        <button id="btn-login-submit" onclick="loginUser()">دخول</button>
+        <button class="secondary-btn" id="btn-login-back" onclick="showScreen('welcome-screen')">رجوع</button>
+    </div>
+
+    <!-- 3. شاشة إنشاء الحساب -->
+    <div id="signup-screen" class="card hidden">
+        <h1 id="txt-signup-title">إنشاء حساب</h1>
+        <div id="signup-error" class="error"></div>
+        <input type="text" id="fullname" placeholder="الاسم الكامل">
+        <input type="tel" id="phone" placeholder="رقم الهاتف">
+        <input type="email" id="email" placeholder="البريد الإلكتروني (Gmail)">
+        <input type="password" id="password" placeholder="كلمة السر (6 أحرف على الأقل)">
+        <button id="btn-signup-submit" onclick="registerUser()">تأكيد</button>
+        <button class="secondary-btn" id="btn-signup-back" onclick="showScreen('welcome-screen')">رجوع</button>
+    </div>
+
+    <!-- 4. شاشة انتظار تأكيد الإيميل -->
+    <div id="verify-screen" class="card hidden">
+        <h1 id="txt-verify-title">تأكيد البريد الإلكتروني</h1>
+        <p id="txt-verify-desc">أرسلنا رابط تأكيد إلى Gmail الخاص بك. افتحه واضغط على الرابط ثم عد هنا.</p>
+        <div id="verify-error" class="error"></div>
+        <button id="btn-check-verify" onclick="checkVerification()">لقد أكدت حسابي، ادخل الآن</button>
+        <button class="secondary-btn" id="btn-verify-logout" onclick="logoutUser()">تسجيل الخروج</button>
+    </div>
+
+    <!-- 5. الشاشة الداخلية بعد النجاح -->
+    <div id="home-screen" class="card hidden">
+        <h1 id="txt-member">مرحباً بك!</h1>
+        <div class="info-box">
+            <div><strong id="lbl-name">الاسم:</strong> <span id="user-name">-</span></div>
+            <div><strong id="lbl-phone">الهاتف:</strong> <span id="user-phone">-</span></div>
+            <div><strong id="lbl-email">الإيميل:</strong> <span id="user-email">-</span></div>
+        </div>
+        <button class="secondary-btn" id="btn-logout" onclick="logoutUser()">تسجيل الخروج</button>
+    </div>
+
+    <!-- Firebase Auth + Firestore -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const translations = {
+            ar: {
+                dir: "rtl", welcome: "مرحباً بك في Wassalna", loginBtn: "تسجيل الدخول", signupBtn: "إنشاء حساب جديد",
+                namePl: "الاسم الكامل", phonePl: "رقم الهاتف", emailPl: "البريد الإلكتروني (Gmail)", passPl: "كلمة السر (6 أحرف على الأقل)",
+                enter: "دخول", submit: "إنشاء الحساب", back: "رجوع", verifyTitle: "تحقق من بريدك",
+                verifyDesc: "أرسلنا رسالة تأكيد إلى Gmail الخاص بك. افتحها واضغط على الرابط ثم عد هنا.",
+                checkBtn: "لقد أكدت حسابي، ادخل الآن", member: "أهلاً بك في حسابك!", logout: "تسجيل الخروج",
+                notVerified: "لم يتم تأكيد الحساب بعد، تفقد بريدك.", fillAll: "يرجى ملء جميع الخانات.",
+                lblName: "الاسم:", lblPhone: "الهاتف:", lblEmail: "الإيميل:"
+            },
+            fr: {
+                dir: "ltr", welcome: "Bienvenue sur Wassalna", loginBtn: "Se connecter", signupBtn: "Créer un compte",
+                namePl: "Nom complet", phonePl: "Numéro de téléphone", emailPl: "Adresse Gmail", passPl: "Mot de passe (6 caractères min)",
+                enter: "Entrer", submit: "S'inscrire", back: "Retour", verifyTitle: "Vérifiez votre e-mail",
+                verifyDesc: "Un lien a été envoyé à votre Gmail. Cliquez dessus puis revenez ici.",
+                checkBtn: "J'ai confirmé, entrer", member: "Bienvenue sur votre compte !", logout: "Se déconnecter",
+                notVerified: "Compte non vérifié. Vérifiez votre Gmail.", fillAll: "Veuillez remplir tous les champs.",
+                lblName: "Nom :", lblPhone: "Téléphone :", lblEmail: "E-mail :"
+            },
+            en: {
+                dir: "ltr", welcome: "Welcome to Wassalna", loginBtn: "Login", signupBtn: "Create Account",
+                namePl: "Full Name", phonePl: "Phone Number", emailPl: "Gmail Address", passPl: "Password (min 6 chars)",
+                enter: "Login", submit: "Sign Up", back: "Back", verifyTitle: "Verify your email",
+                verifyDesc: "We sent a verification link to your Gmail. Click it, then come back here.",
+                checkBtn: "I verified, Enter Now", member: "Welcome to your account!", logout: "Logout",
+                notVerified: "Not verified yet. Check your Gmail.", fillAll: "Please fill in all fields.",
+                lblName: "Name:", lblPhone: "Phone:", lblEmail: "Email:"
+            }
+        };
+
+        const userLang = (navigator.language || 'en').slice(0, 2);
+        const t = translations[userLang] || translations.en;
+
+        document.documentElement.dir = t.dir;
+        document.getElementById('txt-welcome').innerText = t.welcome;
+        document.getElementById('btn-go-login').innerText = t.loginBtn;
+        document.getElementById('btn-go-signup').innerText = t.signupBtn;
+        document.getElementById('txt-login-title').innerText = t.loginBtn;
+        document.getElementById('login-email').placeholder = t.emailPl;
+        document.getElementById('login-password').placeholder = t.passPl;
+        document.getElementById('btn-login-submit').innerText = t.enter;
+        document.getElementById('btn-login-back').innerText = t.back;
+        document.getElementById('txt-signup-title').innerText = t.signupBtn;
+        document.getElementById('fullname').placeholder = t.namePl;
+        document.getElementById('phone').placeholder = t.phonePl;
+        document.getElementById('email').placeholder = t.emailPl;
+        document.getElementById('password').placeholder = t.passPl;
+        document.getElementById('btn-signup-submit').innerText = t.submit;
+        document.getElementById('btn-signup-back').innerText = t.back;
+        document.getElementById('txt-verify-title').innerText = t.verifyTitle;
+        document.getElementById('txt-verify-desc').innerText = t.verifyDesc;
+        document.getElementById('btn-check-verify').innerText = t.checkBtn;
+        document.getElementById('btn-verify-logout').innerText = t.logout;
+        document.getElementById('txt-member').innerText = t.member;
+        document.getElementById('lbl-name').innerText = t.lblName;
+        document.getElementById('lbl-phone').innerText = t.lblPhone;
+        document.getElementById('lbl-email').innerText = t.lblEmail;
+        document.getElementById('btn-logout').innerText = t.logout;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAewWMF6-WIT9cCvt1PeXak25mIaonO_EU",
+            authDomain: "ex-1-ffa10.firebaseapp.com",
+            projectId: "ex-1-ffa10",
+            storageBucket: "ex-1-ffa10.firebasestorage.app",
+            messagingSenderId: "407167923651",
+            appId: "1:407167923651:web:9ff96c609e0261c738f976",
+            measurementId: "G-FVX5DY2X00"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.showScreen = function(screenId) {
+            ['loading-screen', 'welcome-screen', 'login-screen', 'signup-screen', 'verify-screen', 'home-screen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // جلب بيانات المستخدم من Firestore وعرضها
+        async function loadUserProfile(user) {
+            document.getElementById('user-email').innerText = user.email;
+            try {
+                const snap = await getDoc(doc(db, "users", user.uid));
+                if (snap.exists()) {
+                    const data = snap.data();
+                    document.getElementById('user-name').innerText = data.fullName || "-";
+                    document.getElementById('user-phone').innerText = data.phone || "-";
+                } else {
+                    document.getElementById('user-name').innerText = "-";
+                    document.getElementById('user-phone').innerText = "-";
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            showScreen('home-screen');
+        }
+
+        // التحقق التلقائي عند فتح التطبيق
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                if (user.emailVerified) {
+                    await loadUserProfile(user);
+                } else {
+                    showScreen('verify-screen');
+                }
+            } else {
+                showScreen('welcome-screen');
+            }
+        });
+
+        // تسجيل الدخول
+        window.loginUser = async function() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errBox = document.getElementById('login-error');
+            errBox.innerText = "";
+
+            if (!email || !password) { errBox.innerText = t.fillAll; return; }
+            try {
+                const cred = await signInWithEmailAndPassword(auth, email, password);
+                if (cred.user.emailVerified) {
+                    await loadUserProfile(cred.user);
+                } else {
+                    showScreen('verify-screen');
+                }
+            } catch (error) {
+                errBox.innerText = error.message;
+            }
+        }
+
+        // إنشاء حساب + حفظ في Firestore
+        window.registerUser = async function() {
+            const fullName = document.getElementById('fullname').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errBox = document.getElementById('signup-error');
+            errBox.innerText = "";
+
+            if (!fullName || !phone || !email || !password) {
+                errBox.innerText = t.fillAll;
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // حفظ المعلومات في قاعدة البيانات Firestore
+                await setDoc(doc(db, "users", user.uid), {
+                    fullName: fullName,
+                    phone: phone,
+                    email: email,
+                    createdAt: serverTimestamp()
+                });
+
+                await sendEmailVerification(user);
+                showScreen('verify-screen');
+            } catch (error) {
+                errBox.innerText = error.message;
+            }
+        }
+
+        // التحقق من تأكيد الإيميل
+        window.checkVerification = async function() {
+            const user = auth.currentUser;
+            await user.reload();
+            if (user.emailVerified) {
+                await loadUserProfile(user);
+            } else {
+                document.getElementById('verify-error').innerText = t.notVerified;
+            }
+        }
+
+        // تسجيل الخروج
+        window.logoutUser = async function() {
+            await signOut(auth);
+            showScreen('welcome-screen');
+        }
+    </script>
+</body>
+</html>
