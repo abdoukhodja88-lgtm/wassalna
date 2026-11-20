@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -586,4 +587,332 @@
         <!-- شريط التنقل السفلي -->
         <nav class="bottom-nav">
             <button class="nav-item active" id="nav-home" onclick="switchTab('home')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span id="nav-lbl-home">الرئيسية</span>
+            </button>
+            <button class="nav-item" id="nav-activity" onclick="switchTab('activity')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span id="nav-lbl-activity">النشاطات</span>
+            </button>
+            <button class="nav-item" id="nav-profile" onclick="switchTab('profile')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <span id="nav-lbl-profile">حسابي</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- 6. لوحة التحكم (Admin Panel) -->
+    <div id="admin-screen" class="admin-shell hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h1 style="font-size:20px;">⚙️ لوحة التحكم</h1>
+            <button class="secondary-btn" style="width:auto; padding:8px 16px; margin:0;" onclick="showScreen('home-screen')">رجوع</button>
+        </div>
+
+        <div class="stats-bar">
+            <span>إجمالي المستخدمين</span>
+            <span id="admin-total-users" class="stats-count">0</span>
+        </div>
+
+        <input type="text" id="admin-search" placeholder="🔍 ابحث بالاسم أو الإيميل أو الهاتف..." oninput="filterUsers()">
+
+        <div class="admin-actions">
+            <button onclick="loadAllUsers()">🔄 تحديث القائمة</button>
+        </div>
+
+        <div id="admin-users-list">
+            <p style="color: var(--muted); text-align:center;">جاري جلب البيانات...</p>
+        </div>
+    </div>
+
+    <!-- Firebase Auth + Firestore -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 👑 إيميل المدير
+        const ADMIN_EMAIL = "ahmdtyktwk02@gmail.com";
+
+        const translations = {
+            ar: {
+                dir: "rtl", welcome: "مرحباً بك في تطبيق باندا", loginBtn: "تسجيل الدخول", signupBtn: "إنشاء حساب جديد",
+                namePl: "الاسم الكامل", phonePl: "رقم الهاتف", emailPl: "البريد الإلكتروني (Gmail)", passPl: "كلمة السر (6 أحرف على الأقل)",
+                enter: "دخول", submit: "إنشاء الحساب", back: "رجوع", verifyTitle: "تحقق من بريدك",
+                verifyDesc: "أرسلنا رسالة تأكيد إلى Gmail الخاص بك. افتحها واضغط على الرابط ثم عد هنا.",
+                checkBtn: "لقد أكدت حسابي، ادخل الآن", member: "أهلاً بك،", logout: "تسجيل الخروج",
+                notVerified: "لم يتم تأكيد الحساب بعد، تفقد بريدك.", fillAll: "يرجى ملء جميع الخانات.",
+                lblName: "الاسم", lblPhone: "الهاتف", lblEmail: "الإيميل",
+                navHome: "الرئيسية", navAct: "النشاطات", navProf: "حسابي",
+                lblServices: "الخدمات السريعة", lblActTitle: "النشاطات والطلبات", noAct: "لا توجد طلبات أو نشاطات حالياً.",
+                srv1: "طلب جديد", srv1s: "قريباً", srv2: "النشاطات", srv2s: "متابعة الطلبات",
+                srv3: "حسابي", srv3s: "بياناتك الشخصية", srv4: "الدعم", srv4s: "تواصل معنا"
+            },
+            fr: {
+                dir: "ltr", welcome: "Bienvenue sur PANDA", loginBtn: "Se connecter", signupBtn: "Créer un compte",
+                namePl: "Nom complet", phonePl: "Numéro de téléphone", emailPl: "Adresse Gmail", passPl: "Mot de passe (6 caractères min)",
+                enter: "Entrer", submit: "S'inscrire", back: "Retour", verifyTitle: "Vérifiez votre e-mail",
+                verifyDesc: "Un lien a été envoyé à votre Gmail. Cliquez dessus puis revenez ici.",
+                checkBtn: "J'ai confirmé, entrer", member: "Bienvenue,", logout: "Se déconnecter",
+                notVerified: "Compte non vérifié. Vérifiez votre Gmail.", fillAll: "Veuillez remplir tous les champs.",
+                lblName: "Nom", lblPhone: "Téléphone", lblEmail: "E-mail",
+                navHome: "Accueil", navAct: "Activités", navProf: "Profil",
+                lblServices: "Services rapides", lblActTitle: "Activités & Commandes", noAct: "Aucune activité pour le moment.",
+                srv1: "Nouveau", srv1s: "Bientôt", srv2: "Activités", srv2s: "Suivi",
+                srv3: "Profil", srv3s: "Mes infos", srv4: "Support", srv4s: "Contact"
+            },
+            en: {
+                dir: "ltr", welcome: "Welcome to PANDA", loginBtn: "Login", signupBtn: "Create Account",
+                namePl: "Full Name", phonePl: "Phone Number", emailPl: "Gmail Address", passPl: "Password (min 6 chars)",
+                enter: "Login", submit: "Sign Up", back: "Back", verifyTitle: "Verify your email",
+                verifyDesc: "We sent a verification link to your Gmail. Click it, then come back here.",
+                checkBtn: "I verified, Enter Now", member: "Welcome back,", logout: "Logout",
+                notVerified: "Not verified yet. Check your Gmail.", fillAll: "Please fill in all fields.",
+                lblName: "Name", lblPhone: "Phone", lblEmail: "Email",
+                navHome: "Home", navAct: "Activity", navProf: "Profile",
+                lblServices: "Quick Services", lblActTitle: "Activity & Orders", noAct: "No activity yet.",
+                srv1: "New Order", srv1s: "Coming soon", srv2: "Activity", srv2s: "Track orders",
+                srv3: "Profile", srv3s: "Your details", srv4: "Support", srv4s: "Contact us"
+            }
+        };
+
+        const userLang = (navigator.language || 'ar').slice(0, 2);
+        const t = translations[userLang] || translations.en;
+
+        document.documentElement.dir = t.dir;
+        document.getElementById('txt-welcome').innerText = t.welcome;
+        document.getElementById('btn-go-login').innerText = t.loginBtn;
+        document.getElementById('btn-go-signup').innerText = t.signupBtn;
+        document.getElementById('txt-login-title').innerText = t.loginBtn;
+        document.getElementById('login-email').placeholder = t.emailPl;
+        document.getElementById('login-password').placeholder = t.passPl;
+        document.getElementById('btn-login-submit').innerText = t.enter;
+        document.getElementById('btn-login-back').innerText = t.back;
+        document.getElementById('txt-signup-title').innerText = t.signupBtn;
+        document.getElementById('fullname').placeholder = t.namePl;
+        document.getElementById('phone').placeholder = t.phonePl;
+        document.getElementById('email').placeholder = t.emailPl;
+        document.getElementById('password').placeholder = t.passPl;
+        document.getElementById('btn-signup-submit').innerText = t.submit;
+        document.getElementById('btn-signup-back').innerText = t.back;
+        document.getElementById('txt-verify-title').innerText = t.verifyTitle;
+        document.getElementById('txt-verify-desc').innerText = t.verifyDesc;
+        document.getElementById('btn-check-verify').innerText = t.checkBtn;
+        document.getElementById('btn-verify-logout').innerText = t.logout;
+        document.getElementById('txt-member').innerText = t.member;
+        document.getElementById('lbl-name').innerText = t.lblName;
+        document.getElementById('lbl-phone').innerText = t.lblPhone;
+        document.getElementById('lbl-email').innerText = t.lblEmail;
+        document.getElementById('btn-logout').innerText = t.logout;
+        document.getElementById('nav-lbl-home').innerText = t.navHome;
+        document.getElementById('nav-lbl-activity').innerText = t.navAct;
+        document.getElementById('nav-lbl-profile').innerText = t.navProf;
+        document.getElementById('lbl-services').innerText = t.lblServices;
+        document.getElementById('lbl-activity-title').innerText = t.lblActTitle;
+        document.getElementById('txt-no-activity').innerText = t.noAct;
+        document.getElementById('srv-1').innerText = t.srv1;
+        document.getElementById('srv-1-sub').innerText = t.srv1s;
+        document.getElementById('srv-2').innerText = t.srv2;
+        document.getElementById('srv-2-sub').innerText = t.srv2s;
+        document.getElementById('srv-3').innerText = t.srv3;
+        document.getElementById('srv-3-sub').innerText = t.srv3s;
+        document.getElementById('srv-4').innerText = t.srv4;
+        document.getElementById('srv-4-sub').innerText = t.srv4s;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAewWMF6-WIT9cCvt1PeXak25mIaonO_EU",
+            authDomain: "ex-1-ffa10.firebaseapp.com",
+            projectId: "ex-1-ffa10",
+            storageBucket: "ex-1-ffa10.firebasestorage.app",
+            messagingSenderId: "407167923651",
+            appId: "1:407167923651:web:9ff96c609e0261c738f976",
+            measurementId: "G-FVX5DY2X00"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let allUsersCache = [];
+
+        window.showScreen = function(screenId) {
+            ['loading-screen', 'welcome-screen', 'login-screen', 'signup-screen', 'verify-screen', 'home-screen', 'admin-screen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        window.switchTab = function(tabName) {
+            ['home', 'activity', 'profile'].forEach(name => {
+                document.getElementById('tab-' + name).classList.add('hidden');
+                document.getElementById('nav-' + name).classList.remove('active');
+            });
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            document.getElementById('nav-' + tabName).classList.add('active');
+        }
+
+        async function loadUserProfile(user) {
+            document.getElementById('user-email').innerText = user.email;
+            const adminBtn = document.getElementById('btn-open-admin');
+            if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                adminBtn.classList.remove('hidden');
+            } else {
+                adminBtn.classList.add('hidden');
+            }
+
+            try {
+                const snap = await getDoc(doc(db, "users", user.uid));
+                let fullName = "-";
+                let phone = "-";
+                if (snap.exists()) {
+                    const data = snap.data();
+                    fullName = data.fullName || "-";
+                    phone = data.phone || "-";
+                }
+                document.getElementById('user-name').innerText = fullName;
+                document.getElementById('hero-user-name').innerText = fullName;
+                document.getElementById('profile-name-top').innerText = fullName;
+                document.getElementById('user-avatar').innerText = fullName !== "-" ? fullName.charAt(0).toUpperCase() : "P";
+                document.getElementById('user-phone').innerText = phone;
+            } catch (e) {
+                console.error(e);
+            }
+            switchTab('home');
+            showScreen('home-screen');
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                if (user.emailVerified) {
+                    await loadUserProfile(user);
+                } else {
+                    showScreen('verify-screen');
+                }
+            } else {
+                showScreen('welcome-screen');
+            }
+        });
+
+        window.loginUser = async function() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errBox = document.getElementById('login-error');
+            errBox.innerText = "";
+
+            if (!email || !password) { errBox.innerText = t.fillAll; return; }
+            try {
+                const cred = await signInWithEmailAndPassword(auth, email, password);
+                if (cred.user.emailVerified) {
+                    await loadUserProfile(cred.user);
+                } else {
+                    showScreen('verify-screen');
+                }
+            } catch (error) {
+                errBox.innerText = error.message;
+            }
+        }
+
+        window.registerUser = async function() {
+            const fullName = document.getElementById('fullname').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errBox = document.getElementById('signup-error');
+            errBox.innerText = "";
+
+            if (!fullName || !phone || !email || !password) {
+                errBox.innerText = t.fillAll;
+                return;
+            }
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                await setDoc(doc(db, "users", user.uid), {
+                    fullName: fullName,
+                    phone: phone,
+                    email: email,
+                    createdAt: serverTimestamp()
+                });
+
+                await sendEmailVerification(user);
+                showScreen('verify-screen');
+            } catch (error) {
+                errBox.innerText = error.message;
+            }
+        }
+
+        window.checkVerification = async function() {
+            const user = auth.currentUser;
+            await user.reload();
+            if (user.emailVerified) {
+                await loadUserProfile(user);
+            } else {
+                document.getElementById('verify-error').innerText = t.notVerified;
+            }
+        }
+
+        window.logoutUser = async function() {
+            await signOut(auth);
+            showScreen('welcome-screen');
+        }
+
+        // --- لوحة التحكم (Admin Panel) ---
+        window.openAdminPanel = async function() {
+            showScreen('admin-screen');
+            await loadAllUsers();
+        }
+
+        window.loadAllUsers = async function() {
+            const listDiv = document.getElementById('admin-users-list');
+            listDiv.innerHTML = "<p style='color:var(--muted);text-align:center;'>جاري جلب المستخدمين...</p>";
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                allUsersCache = [];
+                querySnapshot.forEach((docSnap) => {
+                    allUsersCache.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                document.getElementById('admin-total-users').innerText = allUsersCache.length;
+                renderUsers(allUsersCache);
+            } catch (error) {
+                listDiv.innerHTML = `<p class="error">خطأ في جلب البيانات: ${error.message}</p>`;
+            }
+        }
+
+        function renderUsers(users) {
+            const listDiv = document.getElementById('admin-users-list');
+            if (users.length === 0) {
+                listDiv.innerHTML = "<p style='color:var(--muted);text-align:center;'>لا يوجد مستخدمون مسجلون بعد.</p>";
+                return;
+            }
+            listDiv.innerHTML = users.map(u => `
+                <div class="user-item">
+                    <div><strong>الاسم:</strong> ${u.fullName || '-'}</div>
+                    <div><strong>الهاتف:</strong> ${u.phone || '-'}</div>
+                    <div><strong>الإيميل:</strong> ${u.email || '-'}</div>
+                    <button class="danger-btn" onclick="deleteUserDoc('${u.id}')">🗑️ حذف من القاعدة</button>
+                </div>
+            `).join('');
+        }
+
+        window.filterUsers = function() {
+            const q = document.getElementById('admin-search').value.toLowerCase().trim();
+            const filtered = allUsersCache.filter(u =>
+                (u.fullName || '').toLowerCase().includes(q) ||
+                (u.email || '').toLowerCase().includes(q) ||
+                (u.phone || '').includes(q)
+            );
+            renderUsers(filtered);
+        }
+
+        window.deleteUserDoc = async function(uid) {
+            if (!confirm("هل أنت متأكد من حذف بيانات هذا المستخدم؟")) return;
+            try {
+                await deleteDoc(doc(db, "users", uid));
+                await loadAllUsers();
+            } catch (error) {
+                alert("خطأ أثناء الحذف: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
