@@ -2,431 +2,588 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PANDA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        :root {
+            --bg: #09090b;
+            --surface: #141418;
+            --surface-2: #1c1c22;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #fafafa;
+            --muted: #a1a1aa;
+            --primary: #ffffff;
+            --primary-text: #09090b;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
-            background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-            color: #fff;
-            min-height: 100vh;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100dvh;
+            overflow-x: hidden;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Auth & Loading Center Layout --- */
+        .center-screen {
+            min-height: 100dvh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 16px;
+            padding: 24px 20px;
         }
-        .card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
-            padding: 28px 20px;
-            border-radius: 20px;
+
+        .brand-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 22px;
+            background: var(--primary);
+            color: var(--primary-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.12);
+        }
+
+        .brand-title {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+
+        .auth-card {
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 28px 22px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
         }
-        h1 { font-size: 22px; margin-bottom: 14px; line-height: 1.4; }
-        p { font-size: 14px; color: #ccc; margin-bottom: 18px; line-height: 1.6; }
+
+        .auth-card h1 {
+            font-size: 21px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .auth-card p {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
         input {
             width: 100%;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 12px;
-            border: none;
-            background: rgba(255,255,255,0.15);
-            color: #fff;
+            padding: 13px 15px;
+            margin-bottom: 12px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            color: var(--text);
             font-size: 14px;
             outline: none;
+            transition: border-color 0.2s;
         }
-        input::placeholder { color: #bbb; }
+
+        input:focus { border-color: rgba(255, 255, 255, 0.4); }
+        input::placeholder { color: #71717a; }
+
         button {
             width: 100%;
-            padding: 12px;
+            padding: 13px;
             border: none;
-            border-radius: 12px;
-            background: #4e54c8;
-            color: white;
+            border-radius: 14px;
+            background: var(--primary);
+            color: var(--primary-text);
             font-size: 15px;
-            font-weight: bold;
+            font-weight: 700;
             cursor: pointer;
-            transition: 0.2s;
+            transition: transform 0.15s, opacity 0.15s;
             margin-top: 6px;
         }
-        button:active { transform: scale(0.97); }
-        .secondary-btn { background: transparent; border: 1px solid #4e54c8; margin-top: 10px; }
-        .admin-btn { background: linear-gradient(135deg, #f59e0b, #d97706); margin-top: 10px; }
-        .danger-btn { background: #ef4444; padding: 6px 12px; font-size: 12px; width: auto; margin-top: 8px; border-radius: 8px; }
-        .hidden { display: none; }
-        .error { color: #ff6b6b; font-size: 13px; margin-bottom: 10px; min-height: 18px; }
-        .info-box {
-            background: rgba(255,255,255,0.07);
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            text-align: start;
-            font-size: 14px;
-            line-height: 1.8;
+
+        button:active { transform: scale(0.97); opacity: 0.9; }
+
+        .secondary-btn {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            margin-top: 10px;
         }
-        /* Admin Panel Styles */
+
+        .admin-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #09090b;
+            margin-top: 10px;
+        }
+
+        .danger-btn {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 8px 14px;
+            font-size: 12px;
+            width: auto;
+            margin-top: 10px;
+            border-radius: 10px;
+        }
+
+        .error {
+            color: #f87171;
+            font-size: 13px;
+            margin-bottom: 10px;
+            min-height: 18px;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 38px;
+            height: 38px;
+            border: 3px solid var(--surface-2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 14px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- Main App Shell --- */
+        .app-shell {
+            min-height: 100dvh;
+            padding-bottom: 84px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(9, 9, 11, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: 1.5px;
+        }
+
+        .top-brand-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: var(--primary);
+            color: var(--primary-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-dot {
+            font-size: 12px;
+            color: var(--muted);
+            background: var(--surface-2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-content {
+            padding: 18px;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hero Banner */
+        .hero-card {
+            background: linear-gradient(145deg, #1c1c24, #111115);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 20px;
+            margin-bottom: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-greeting {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .hero-name {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: var(--text);
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        /* Quick Services Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .service-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.2s;
+        }
+
+        .service-card:active { transform: scale(0.96); border-color: rgba(255,255,255,0.25); }
+
+        .service-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: var(--surface-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 20px;
+        }
+
+        .service-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+        .service-card span { font-size: 11px; color: var(--muted); }
+
+        /* Empty / Activity Card */
+        .panel-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 36px 16px;
+            color: var(--muted);
+        }
+
+        .empty-state .emoji { font-size: 36px; margin-bottom: 10px; display: block; }
+
+        /* Profile */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .avatar-circle {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--primary-text);
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--muted); }
+        .info-val { font-weight: 600; direction: ltr; }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            background: rgba(14, 14, 18, 0.94);
+            backdrop-filter: blur(14px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 8px 14px;
+            z-index: 30;
+        }
+
+        .nav-item {
+            background: transparent;
+            color: var(--muted);
+            border: none;
+            width: auto;
+            margin: 0;
+            padding: 6px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 12px;
+        }
+
+        .nav-item.active { color: var(--primary); }
+        .nav-item svg { width: 22px; height: 22px; }
+
+        /* Admin Screen */
+        .admin-shell {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 18px;
+            min-height: 100dvh;
+        }
+
         .stats-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(78, 84, 200, 0.25);
-            border: 1px solid rgba(78, 84, 200, 0.5);
-            padding: 12px 16px;
-            border-radius: 12px;
+            background: var(--surface);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            padding: 16px 18px;
+            border-radius: 18px;
             margin-bottom: 14px;
             font-size: 15px;
         }
-        .stats-count { font-size: 22px; font-weight: bold; color: #f59e0b; }
-        .users-list {
-            max-height: 320px;
-            overflow-y: auto;
-            text-align: start;
-            margin-bottom: 14px;
-        }
+
+        .stats-count { font-size: 26px; font-weight: 800; color: var(--accent); }
+
+        .admin-actions { display: flex; gap: 10px; margin-bottom: 14px; }
+        .admin-actions button { margin-top: 0; font-size: 14px; padding: 11px; }
+
         .user-item {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 12px;
-            border-radius: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: 16px;
             margin-bottom: 10px;
             font-size: 13px;
-            line-height: 1.6;
+            line-height: 1.7;
         }
-        .user-item strong { color: #a5b4fc; }
-        .admin-actions { display: flex; gap: 8px; margin-bottom: 10px; }
-        .admin-actions button { margin-top: 0; font-size: 14px; padding: 10px; }
+
+        .user-item strong { color: var(--muted); font-weight: 600; }
     </style>
 </head>
 <body>
 
     <!-- 0. شاشة التحميل -->
-    <div id="loading-screen" class="card">
-        <p style="margin:0;">جاري التحميل...</p>
+    <div id="loading-screen" class="center-screen">
+        <div class="spinner"></div>
+        <p style="color: var(--muted); font-size: 14px;">PANDA...</p>
     </div>
 
     <!-- 1. شاشة الترحيب -->
-    <div id="welcome-screen" class="card hidden">
-        <h1 id="txt-welcome">مرحباً بك</h1>
-        <button id="btn-go-login" onclick="showScreen('login-screen')">تسجيل الدخول</button>
-        <button class="secondary-btn" id="btn-go-signup" onclick="showScreen('signup-screen')">إنشاء حساب جديد</button>
+    <div id="welcome-screen" class="center-screen hidden">
+        <div class="auth-card">
+            <div class="brand-logo">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="13" r="7"/>
+                    <circle cx="7" cy="6.5" r="2.2" fill="currentColor"/>
+                    <circle cx="17" cy="6.5" r="2.2" fill="currentColor"/>
+                    <circle cx="9.5" cy="12" r="1.2" fill="currentColor"/>
+                    <circle cx="14.5" cy="12" r="1.2" fill="currentColor"/>
+                    <path d="M10.5 15.5c.8.6 2.2.6 3 0"/>
+                </svg>
+            </div>
+            <div class="brand-title">PANDA</div>
+            <p id="txt-welcome">مرحباً بك في تطبيق باندا</p>
+            <button id="btn-go-login" onclick="showScreen('login-screen')">تسجيل الدخول</button>
+            <button class="secondary-btn" id="btn-go-signup" onclick="showScreen('signup-screen')">إنشاء حساب جديد</button>
+        </div>
     </div>
 
     <!-- 2. شاشة تسجيل الدخول -->
-    <div id="login-screen" class="card hidden">
-        <h1 id="txt-login-title">تسجيل الدخول</h1>
-        <div id="login-error" class="error"></div>
-        <input type="email" id="login-email" placeholder="البريد الإلكتروني">
-        <input type="password" id="login-password" placeholder="كلمة السر">
-        <button id="btn-login-submit" onclick="loginUser()">دخول</button>
-        <button class="secondary-btn" id="btn-login-back" onclick="showScreen('welcome-screen')">رجوع</button>
+    <div id="login-screen" class="center-screen hidden">
+        <div class="auth-card">
+            <h1 id="txt-login-title">تسجيل الدخول</h1>
+            <p>PANDA Account</p>
+            <div id="login-error" class="error"></div>
+            <input type="email" id="login-email" placeholder="البريد الإلكتروني">
+            <input type="password" id="login-password" placeholder="كلمة السر">
+            <button id="btn-login-submit" onclick="loginUser()">دخول</button>
+            <button class="secondary-btn" id="btn-login-back" onclick="showScreen('welcome-screen')">رجوع</button>
+        </div>
     </div>
 
     <!-- 3. شاشة إنشاء الحساب -->
-    <div id="signup-screen" class="card hidden">
-        <h1 id="txt-signup-title">إنشاء حساب</h1>
-        <div id="signup-error" class="error"></div>
-        <input type="text" id="fullname" placeholder="الاسم الكامل">
-        <input type="tel" id="phone" placeholder="رقم الهاتف">
-        <input type="email" id="email" placeholder="البريد الإلكتروني (Gmail)">
-        <input type="password" id="password" placeholder="كلمة السر (6 أحرف على الأقل)">
-        <button id="btn-signup-submit" onclick="registerUser()">تأكيد</button>
-        <button class="secondary-btn" id="btn-signup-back" onclick="showScreen('welcome-screen')">رجوع</button>
-    </div>
-
-    <!-- 4. شاشة انتظار تأكيد الإيميل -->
-    <div id="verify-screen" class="card hidden">
-        <h1 id="txt-verify-title">تأكيد البريد الإلكتروني</h1>
-        <p id="txt-verify-desc">أرسلنا رابط تأكيد إلى Gmail الخاص بك. افتحه واضغط على الرابط ثم عد هنا.</p>
-        <div id="verify-error" class="error"></div>
-        <button id="btn-check-verify" onclick="checkVerification()">لقد أكدت حسابي، ادخل الآن</button>
-        <button class="secondary-btn" id="btn-verify-logout" onclick="logoutUser()">تسجيل الخروج</button>
-    </div>
-
-    <!-- 5. الشاشة الرئيسية للمستخدم -->
-    <div id="home-screen" class="card hidden">
-        <h1 id="txt-member">أهلاً بك في حسابك!</h1>
-        <div class="info-box">
-            <div><strong id="lbl-name">الاسم:</strong> <span id="user-name">-</span></div>
-            <div><strong id="lbl-phone">الهاتف:</strong> <span id="user-phone">-</span></div>
-            <div><strong id="lbl-email">الإيميل:</strong> <span id="user-email">-</span></div>
-        </div>
-        <!-- زر يظهر للمدير فقط -->
-        <button id="btn-open-admin" class="admin-btn hidden" onclick="openAdminPanel()">⚙️ لوحة التحكم (Admin)</button>
-        <button class="secondary-btn" id="btn-logout" onclick="logoutUser()">تسجيل الخروج</button>
-    </div>
-
-    <!-- 6. لوحة التحكم (Admin Panel) -->
-    <div id="admin-screen" class="card hidden">
-        <h1>⚙️ لوحة التحكم</h1>
-        <div class="stats-bar">
-            <span>إجمالي المستخدمين:</span>
-            <span id="admin-total-users" class="stats-count">0</span>
-        </div>
-        <input type="text" id="admin-search" placeholder="🔍 ابحث بالاسم أو الإيميل..." oninput="filterUsers()">
-        <div class="admin-actions">
-            <button onclick="loadAllUsers()">🔄 تحديث</button>
-            <button class="secondary-btn" onclick="showScreen('home-screen')">رجوع</button>
-        </div>
-        <div id="admin-users-list" class="users-list">
-            <p>جاري جلب البيانات...</p>
+    <div id="signup-screen" class="center-screen hidden">
+        <div class="auth-card">
+            <h1 id="txt-signup-title">إنشاء حساب</h1>
+            <p>PANDA Account</p>
+            <div id="signup-error" class="error"></div>
+            <input type="text" id="fullname" placeholder="الاسم الكامل">
+            <input type="tel" id="phone" placeholder="رقم الهاتف">
+            <input type="email" id="email" placeholder="البريد الإلكتروني (Gmail)">
+            <input type="password" id="password" placeholder="كلمة السر (6 أحرف على الأقل)">
+            <button id="btn-signup-submit" onclick="registerUser()">تأكيد</button>
+            <button class="secondary-btn" id="btn-signup-back" onclick="showScreen('welcome-screen')">رجوع</button>
         </div>
     </div>
 
-    <!-- Firebase Auth + Firestore -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <!-- 4. شاشة تأكيد الإيميل -->
+    <div id="verify-screen" class="center-screen hidden">
+        <div class="auth-card">
+            <h1 id="txt-verify-title">تأكيد البريد الإلكتروني</h1>
+            <p id="txt-verify-desc">أرسلنا رابط تأكيد إلى Gmail الخاص بك. افتحه واضغط على الرابط ثم عد هنا.</p>
+            <div id="verify-error" class="error"></div>
+            <button id="btn-check-verify" onclick="checkVerification()">لقد أكدت حسابي، ادخل الآن</button>
+            <button class="secondary-btn" id="btn-verify-logout" onclick="logoutUser()">تسجيل الخروج</button>
+        </div>
+    </div>
 
-        // 👑 إيميل المدير (تقدر تبدلو وقت ما تحب)
-        const ADMIN_EMAIL = "ahmdtyktwk02@gmail.com";
-
-        const translations = {
-            ar: {
-                dir: "rtl", welcome: "مرحباً بك", loginBtn: "تسجيل الدخول", signupBtn: "إنشاء حساب جديد",
-                namePl: "الاسم الكامل", phonePl: "رقم الهاتف", emailPl: "البريد الإلكتروني (Gmail)", passPl: "كلمة السر (6 أحرف على الأقل)",
-                enter: "دخول", submit: "إنشاء الحساب", back: "رجوع", verifyTitle: "تحقق من بريدك",
-                verifyDesc: "أرسلنا رسالة تأكيد إلى Gmail الخاص بك. افتحها واضغط على الرابط ثم عد هنا.",
-                checkBtn: "لقد أكدت حسابي، ادخل الآن", member: "أهلاً بك في حسابك!", logout: "تسجيل الخروج",
-                notVerified: "لم يتم تأكيد الحساب بعد، تفقد بريدك.", fillAll: "يرجى ملء جميع الخانات.",
-                lblName: "الاسم:", lblPhone: "الهاتف:", lblEmail: "الإيميل:"
-            },
-            fr: {
-                dir: "ltr", welcome: "Bienvenue", loginBtn: "Se connecter", signupBtn: "Créer un compte",
-                namePl: "Nom complet", phonePl: "Numéro de téléphone", emailPl: "Adresse Gmail", passPl: "Mot de passe (6 caractères min)",
-                enter: "Entrer", submit: "S'inscrire", back: "Retour", verifyTitle: "Vérifiez votre e-mail",
-                verifyDesc: "Un lien a été envoyé à votre Gmail. Cliquez dessus puis revenez ici.",
-                checkBtn: "J'ai confirmé, entrer", member: "Bienvenue sur votre compte !", logout: "Se déconnecter",
-                notVerified: "Compte non vérifié. Vérifiez votre Gmail.", fillAll: "Veuillez remplir tous les champs.",
-                lblName: "Nom :", lblPhone: "Téléphone :", lblEmail: "E-mail :"
-            },
-            en: {
-                dir: "ltr", welcome: "Welcome", loginBtn: "Login", signupBtn: "Create Account",
-                namePl: "Full Name", phonePl: "Phone Number", emailPl: "Gmail Address", passPl: "Password (min 6 chars)",
-                enter: "Login", submit: "Sign Up", back: "Back", verifyTitle: "Verify your email",
-                verifyDesc: "We sent a verification link to your Gmail. Click it, then come back here.",
-                checkBtn: "I verified, Enter Now", member: "Welcome to your account!", logout: "Logout",
-                notVerified: "Not verified yet. Check your Gmail.", fillAll: "Please fill in all fields.",
-                lblName: "Name:", lblPhone: "Phone:", lblEmail: "Email:"
-            }
-        };
-
-        const userLang = (navigator.language || 'en').slice(0, 2);
-        const t = translations[userLang] || translations.en;
-
-        document.documentElement.dir = t.dir;
-        document.getElementById('txt-welcome').innerText = t.welcome;
-        document.getElementById('btn-go-login').innerText = t.loginBtn;
-        document.getElementById('btn-go-signup').innerText = t.signupBtn;
-        document.getElementById('txt-login-title').innerText = t.loginBtn;
-        document.getElementById('login-email').placeholder = t.emailPl;
-        document.getElementById('login-password').placeholder = t.passPl;
-        document.getElementById('btn-login-submit').innerText = t.enter;
-        document.getElementById('btn-login-back').innerText = t.back;
-        document.getElementById('txt-signup-title').innerText = t.signupBtn;
-        document.getElementById('fullname').placeholder = t.namePl;
-        document.getElementById('phone').placeholder = t.phonePl;
-        document.getElementById('email').placeholder = t.emailPl;
-        document.getElementById('password').placeholder = t.passPl;
-        document.getElementById('btn-signup-submit').innerText = t.submit;
-        document.getElementById('btn-signup-back').innerText = t.back;
-        document.getElementById('txt-verify-title').innerText = t.verifyTitle;
-        document.getElementById('txt-verify-desc').innerText = t.verifyDesc;
-        document.getElementById('btn-check-verify').innerText = t.checkBtn;
-        document.getElementById('btn-verify-logout').innerText = t.logout;
-        document.getElementById('txt-member').innerText = t.member;
-        document.getElementById('lbl-name').innerText = t.lblName;
-        document.getElementById('lbl-phone').innerText = t.lblPhone;
-        document.getElementById('lbl-email').innerText = t.lblEmail;
-        document.getElementById('btn-logout').innerText = t.logout;
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAewWMF6-WIT9cCvt1PeXak25mIaonO_EU",
-            authDomain: "ex-1-ffa10.firebaseapp.com",
-            projectId: "ex-1-ffa10",
-            storageBucket: "ex-1-ffa10.firebasestorage.app",
-            messagingSenderId: "407167923651",
-            appId: "1:407167923651:web:9ff96c609e0261c738f976",
-            measurementId: "G-FVX5DY2X00"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        let allUsersCache = [];
-
-        window.showScreen = function(screenId) {
-            ['loading-screen', 'welcome-screen', 'login-screen', 'signup-screen', 'verify-screen', 'home-screen', 'admin-screen'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            document.getElementById(screenId).classList.remove('hidden');
-        }
-
-        async function loadUserProfile(user) {
-            document.getElementById('user-email').innerText = user.email;
-            // إظهار زر لوحة التحكم للمدير فقط
-            const adminBtn = document.getElementById('btn-open-admin');
-            if (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-                adminBtn.classList.remove('hidden');
-            } else {
-                adminBtn.classList.add('hidden');
-            }
-
-            try {
-                const snap = await getDoc(doc(db, "users", user.uid));
-                if (snap.exists()) {
-                    const data = snap.data();
-                    document.getElementById('user-name').innerText = data.fullName || "-";
-                    document.getElementById('user-phone').innerText = data.phone || "-";
-                } else {
-                    document.getElementById('user-name').innerText = "-";
-                    document.getElementById('user-phone').innerText = "-";
-                }
-            } catch (e) {
-                console.error(e);
-            }
-            showScreen('home-screen');
-        }
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                if (user.emailVerified) {
-                    await loadUserProfile(user);
-                } else {
-                    showScreen('verify-screen');
-                }
-            } else {
-                showScreen('welcome-screen');
-            }
-        });
-
-        window.loginUser = async function() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            const errBox = document.getElementById('login-error');
-            errBox.innerText = "";
-
-            if (!email || !password) { errBox.innerText = t.fillAll; return; }
-            try {
-                const cred = await signInWithEmailAndPassword(auth, email, password);
-                if (cred.user.emailVerified) {
-                    await loadUserProfile(cred.user);
-                } else {
-                    showScreen('verify-screen');
-                }
-            } catch (error) {
-                errBox.innerText = error.message;
-            }
-        }
-
-        window.registerUser = async function() {
-            const fullName = document.getElementById('fullname').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const errBox = document.getElementById('signup-error');
-            errBox.innerText = "";
-
-            if (!fullName || !phone || !email || !password) {
-                errBox.innerText = t.fillAll;
-                return;
-            }
-
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-
-                await setDoc(doc(db, "users", user.uid), {
-                    fullName: fullName,
-                    phone: phone,
-                    email: email,
-                    createdAt: serverTimestamp()
-                });
-
-                await sendEmailVerification(user);
-                showScreen('verify-screen');
-            } catch (error) {
-                errBox.innerText = error.message;
-            }
-        }
-
-        window.checkVerification = async function() {
-            const user = auth.currentUser;
-            await user.reload();
-            if (user.emailVerified) {
-                await loadUserProfile(user);
-            } else {
-                document.getElementById('verify-error').innerText = t.notVerified;
-            }
-        }
-
-        window.logoutUser = async function() {
-            await signOut(auth);
-            showScreen('welcome-screen');
-        }
-
-        // --- وظائف لوحة التحكم (Admin Panel) ---
-        window.openAdminPanel = async function() {
-            showScreen('admin-screen');
-            await loadAllUsers();
-        }
-
-        window.loadAllUsers = async function() {
-            const listDiv = document.getElementById('admin-users-list');
-            listDiv.innerHTML = "<p>جاري جلب المستخدمين...</p>";
-            try {
-                const querySnapshot = await getDocs(collection(db, "users"));
-                allUsersCache = [];
-                querySnapshot.forEach((docSnap) => {
-                    allUsersCache.push({ id: docSnap.id, ...docSnap.data() });
-                });
-                document.getElementById('admin-total-users').innerText = allUsersCache.length;
-                renderUsers(allUsersCache);
-            } catch (error) {
-                listDiv.innerHTML = `<p class="error">خطأ في جلب البيانات: ${error.message}</p>`;
-            }
-        }
-
-        function renderUsers(users) {
-            const listDiv = document.getElementById('admin-users-list');
-            if (users.length === 0) {
-                listDiv.innerHTML = "<p>لا يوجد مستخدمون مسجلون في Firestore بعد.</p>";
-                return;
-            }
-            listDiv.innerHTML = users.map(u => `
-                <div class="user-item">
-                    <div><strong>الاسم:</strong> ${u.fullName || '-'}</div>
-                    <div><strong>الهاتف:</strong> ${u.phone || '-'}</div>
-                    <div><strong>الإيميل:</strong> ${u.email || '-'}</div>
-                    <button class="danger-btn" onclick="deleteUserDoc('${u.id}')">🗑️ حذف من القاعدة</button>
+    <!-- 5. واجهة التطبيق الرئيسية (PANDA App Shell) -->
+    <div id="home-screen" class="app-shell hidden">
+        <!-- الشريط العلوي -->
+        <div class="top-bar">
+            <div class="top-brand">
+                <div class="top-brand-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                        <circle cx="12" cy="13" r="7"/>
+                        <circle cx="7" cy="6.5" r="2.2" fill="currentColor"/>
+                        <circle cx="17" cy="6.5" r="2.2" fill="currentColor"/>
+                        <circle cx="9.5" cy="12" r="1.2" fill="currentColor"/>
+                        <circle cx="14.5" cy="12" r="1.2" fill="currentColor"/>
+                    </svg>
                 </div>
-            `).join('');
-        }
+                <span>PANDA</span>
+            </div>
+            <span class="status-dot">● Active</span>
+        </div>
 
-        window.filterUsers = function() {
-            const q = document.getElementById('admin-search').value.toLowerCase().trim();
-            const filtered = allUsersCache.filter(u =>
-                (u.fullName || '').toLowerCase().includes(q) ||
-                (u.email || '').toLowerCase().includes(q) ||
-                (u.phone || '').includes(q)
-            );
-            renderUsers(filtered);
-        }
+        <!-- التبويب 1: الرئيسية -->
+        <div id="tab-home" class="tab-content">
+            <div class="hero-card">
+                <div class="hero-greeting" id="txt-member">أهلاً بك في حسابك!</div>
+                <div class="hero-name" id="hero-user-name">-</div>
+                <span class="hero-badge">PANDA Member</span>
+            </div>
 
-        window.deleteUserDoc = async function(uid) {
-            if (!confirm("هل أنت متأكد من حذف بيانات هذا المستخدم من قاعدة البيانات؟")) return;
-            try {
-                await deleteDoc(doc(db, "users", uid));
-                await loadAllUsers();
-            } catch (error) {
-                alert("خطأ أثناء الحذف: " + error.message);
-            }
-        }
-    </script>
-</body>
-    </html>
-    
+            <div class="section-title" id="lbl-services">الخدمات السريعة</div>
+            <div class="grid-2">
+                <div class="service-card" onclick="switchTab('activity')">
+                    <div class="service-icon">⚡</div>
+                    <h3 id="srv-1">طلب جديد</h3>
+                    <span id="srv-1-sub">قريباً</span>
+                </div>
+                <div class="service-card" onclick="switchTab('activity')">
+                    <div class="service-icon">📦</div>
+                    <h3 id="srv-2">النشاطات</h3>
+                    <span id="srv-2-sub">متابعة الطلبات</span>
+                </div>
+                <div class="service-card" onclick="switchTab('profile')">
+                    <div class="service-icon">👤</div>
+                    <h3 id="srv-3">حسابي</h3>
+                    <span id="srv-3-sub">البيانات الشخصية</span>
+                </div>
+                <div class="service-card" onclick="alert('PANDA v1.0')">
+                    <div class="service-icon">💬</div>
+                    <h3 id="srv-4">الدعم</h3>
+                    <span id="srv-4-sub">تواصل معنا</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- التبويب 2: النشاطات -->
+        <div id="tab-activity" class="tab-content hidden">
+            <div class="section-title" id="lbl-activity-title">النشاطات والطلبات</div>
+            <div class="panel-card empty-state">
+                <span class="emoji">🐼</span>
+                <p id="txt-no-activity">لا توجد طلبات أو نشاطات حالياً.</p>
+            </div>
+        </div>
+
+        <!-- التبويب 3: حسابي -->
+        <div id="tab-profile" class="tab-content hidden">
+            <div class="panel-card">
+                <div class="profile-header">
+                    <div class="avatar-circle" id="user-avatar">P</div>
+                    <div>
+                        <div style="font-size: 17px; font-weight: 700;" id="profile-name-top">-</div>
+                        <div style="font-size: 12px; color: var(--muted);">PANDA Account</div>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="lbl-name">الاسم:</span>
+                    <span class="info-val" id="user-name">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="lbl-phone">الهاتف:</span>
+                    <span class="info-val" id="user-phone">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label" id="lbl-email">الإيميل:</span>
+                    <span class="info-val" id="user-email">-</span>
+                </div>
+            </div>
+
+            <!-- زر يظهر للمدير فقط -->
+            <button id="btn-open-admin" class="admin-btn hidden" onclick="openAdminPanel()">⚙️ لوحة التحكم (Admin)</button>
+            <button class="secondary-btn" id="btn-logout" onclick="logoutUser()">تسجيل الخروج</button>
+        </div>
+
+        <!-- شريط التنقل السفلي -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" id="nav-home" onclick="switchTab('home')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1
